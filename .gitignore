@@ -1,5 +1,6 @@
 ### Dataset
 data/
+code/lightning_logs
 ​
 # macOS + Windows
 .DS_Store
