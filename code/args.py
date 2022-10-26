@@ -16,5 +16,6 @@ def parse_args(mode="train"):
     
     parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--save_model', default=False)
+    parser.add_argument('--wandb', default=True)
     args = parser.parse_args(args=[])
     return args

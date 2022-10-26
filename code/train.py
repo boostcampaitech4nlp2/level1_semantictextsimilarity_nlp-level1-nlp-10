@@ -1,10 +1,13 @@
+import torch
+import pytorch_lightning as pl
+
+from pytorch_lightning.loggers import WandbLogger
+
 from args import parse_args
 from sts.dataloader import Dataloader
 from sts.model import Model
 from sts.utils import set_seed
 
-import torch
-import pytorch_lightning as pl
 
 
 def main(args):
@@ -17,14 +20,15 @@ def main(args):
                             args.test_path, args.predict_path)
     model = Model(args.model_name, args.learning_rate)
 
-    # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
-    trainer = pl.Trainer(gpus=1, max_epochs=args.max_epoch, log_every_n_steps=1)
+    # wandb 설정
+    if args.wandb:
+        wandb_logger = WandbLogger(project=args.model_name.replace('/','_'),
+                                   save_dir = '../data/wandb_checkpoints')
+        trainer = pl.Trainer(gpus=1, max_epochs=args.max_epoch, log_every_n_steps=1, logger=wandb_logger)
+    else:
+        # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
+        trainer = pl.Trainer(gpus=1, max_epochs=args.max_epoch, log_every_n_steps=1)
     
-    #TODO: Set Wandb
-    # wandb setting
-    # wandb.login()
-    # wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, config=vars(args))
-
     # Train part
     trainer.fit(model=model, datamodule=dataloader)
     trainer.test(model=model, datamodule=dataloader)
