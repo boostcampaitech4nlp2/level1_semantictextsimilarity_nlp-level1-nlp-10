@@ -3,7 +3,7 @@ import pytorch_lightning as pl
 
 from pytorch_lightning.loggers import WandbLogger
 
-from args import parse_args
+from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
 from sts.utils import set_seed
@@ -39,7 +39,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    args = parse_args(mode="train")
+    args = get_args(mode="train")
     main(args)
 
 
