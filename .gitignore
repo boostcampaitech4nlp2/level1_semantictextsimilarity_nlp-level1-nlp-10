@@ -92,3 +92,10 @@ venv.bak/
 .profile
 .wget-hsts
 .git
+.gitconfig
+.nv
+lightning_logs/
+*.pt
+.viminfo
+.netrc
+wandb/
