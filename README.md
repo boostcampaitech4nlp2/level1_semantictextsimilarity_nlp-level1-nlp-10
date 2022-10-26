@@ -19,4 +19,7 @@
 ├─ notebooks
 |  └─ EDA.ipynb
 └─ data
+   ├─ saved_models
+   ├─ submissions
+   └─ wandb_checkpoints
 ```
