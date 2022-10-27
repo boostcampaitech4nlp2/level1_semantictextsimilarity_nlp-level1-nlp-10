@@ -1,11 +1,14 @@
+import os
 import torch
 import pytorch_lightning as pl
 import pandas as pd
 
-from args import parse_args
+from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
 from sts.utils import set_seed
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def main(args):
     set_seed(args.seed)
@@ -18,12 +21,14 @@ def main(args):
     # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
     trainer = pl.Trainer(accelerator='gpu', devices=1, max_epochs=args.max_epoch, log_every_n_steps=1)
     
-    model_name = args.model_name.replace('/','_')
+    model_name = args.model_name.replace('/','_') + args.version
     # Inference part
     # 저장된 모델로 예측을 진행합니다.
+    print(f'Load Model:{model_name}.pt...')
     model = torch.load(f'../data/saved_models/{model_name}.pt')
+    print(f'Make predictions....')
     predictions = trainer.predict(model=model, datamodule=dataloader)
-
+    print('DONE')
     # 예측된 결과를 형식에 맞게 반올림하여 준비합니다.
     predictions = list(round(float(i), 1) for i in torch.cat(predictions))
 
@@ -33,5 +38,5 @@ def main(args):
     output.to_csv(f'../data/submissions/{model_name}.csv', index=False)
 
 if __name__ == '__main__':
-    args = parse_args(mode="test")
+    args = get_args(mode="test")
     main(args)

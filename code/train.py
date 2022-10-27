@@ -1,14 +1,15 @@
+import os
 import torch
 import pytorch_lightning as pl
 
 from pytorch_lightning.loggers import WandbLogger
 
-from args import parse_args
+from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
 from sts.utils import set_seed
 
-
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def main(args):
     set_seed(args.seed)
@@ -16,8 +17,7 @@ def main(args):
     args.device = device
     
     # dataloader와 model을 생성합니다.
-    dataloader = Dataloader(args.model_name, args.batch_size, args.shuffle, args.train_path, args.dev_path,
-                            args.test_path, args.predict_path)
+    dataloader = Dataloader(args)
     model = Model(args.model_name, args.learning_rate)
 
     model_name = args.model_name.replace('/','_')
@@ -39,11 +39,12 @@ def main(args):
     # 학습이 완료된 모델을 저장합니다.
     # TODO: 중복 이름으로 덮어쓰기 되는 상황을 막으려면 랜덤 변수를 따로 이름에 설정해야 할 듯.
     if args.save_model:
+        model_name += args.version
         torch.save(model, f'../data/saved_models/{model_name}.pt')
 
 
 if __name__ == '__main__':
-    args = parse_args(mode="train")
+    args = get_args(mode="train")
     main(args)
 
 
