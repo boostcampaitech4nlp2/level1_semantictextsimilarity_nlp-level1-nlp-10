@@ -1,4 +1,5 @@
 import os
+from subprocess import check_output
 import torch
 import pytorch_lightning as pl
 
@@ -7,7 +8,7 @@ from pytorch_lightning.loggers import WandbLogger
 from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
-from sts.utils import set_seed, setdir, param_check
+from sts.utils import set_seed, setdir, check_param
 
 
 data_dir = '../data'
@@ -23,7 +24,7 @@ def main(args):
     dirpath = setdir(data_dir, model_dirname, reset=False)
     
     #argparser로 받아온 parameter을 terminal에 출력하여 확인할 수 있게 합니다
-    param_check(args.model_name, args.batch_size, args.max_epoch, args.shuffle, args.learning_rate)
+    check_param(args.model_name, args.batch_size, args.max_epoch, args.shuffle, args.learning_rate)
     
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(args.model_name, args.batch_size, args.shuffle, args.train_path, args.dev_path,
@@ -42,6 +43,7 @@ def main(args):
         trainer = pl.Trainer(accelerator='gpu', devices=1,
                              max_epochs=args.max_epoch, log_every_n_steps=1)
     
+
     # Train part
     trainer.fit(model=model, datamodule=dataloader)
     trainer.test(model=model, datamodule=dataloader)
