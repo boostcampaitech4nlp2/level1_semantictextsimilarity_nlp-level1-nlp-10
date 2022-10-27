@@ -21,3 +21,14 @@ def setdir(dirpath, dirname=None, reset=True):
         rmtree(filepath)
         os.mkdir(filepath)
     return filepath 
+
+def check_params(model_name, batch_size, max_epoch, shuffle, lr, seed):
+    print('-'*40)
+    print('********CHECK PARAMETERS********')
+    print('MODEL NAME    |', model_name)
+    print('BATCH SIZE    |', batch_size)
+    print('MAX EPOCH     |', max_epoch)
+    print('SHUFFLE       |', shuffle)
+    print('LEARNING RATE |', lr)
+    print('SEED          |', seed)
+    print('-'*40)

@@ -1,4 +1,5 @@
 import os
+from subprocess import check_output
 import torch
 import pytorch_lightning as pl
 
@@ -7,7 +8,7 @@ from pytorch_lightning.loggers import WandbLogger
 from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
-from sts.utils import set_seed, setdir
+from sts.utils import set_seed, setdir, check_params
 
 
 data_dir = '../data'
@@ -21,6 +22,9 @@ def main(args):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     args.device = device
     dirpath = setdir(data_dir, model_dirname, reset=False)
+    
+    #argparser로 받아온 parameter을 terminal에 출력하여 확인할 수 있게 합니다
+    check_params(args.model_name, args.batch_size, args.max_epoch, args.shuffle, args.learning_rate, args.seed)
     
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(args.model_name, args.batch_size, args.shuffle, args.train_path, args.dev_path,
@@ -39,6 +43,7 @@ def main(args):
         trainer = pl.Trainer(accelerator='gpu', devices=1,
                              max_epochs=args.max_epoch, log_every_n_steps=1)
     
+
     # Train part
     trainer.fit(model=model, datamodule=dataloader)
     trainer.test(model=model, datamodule=dataloader)
