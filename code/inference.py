@@ -3,7 +3,7 @@ import torch
 import pytorch_lightning as pl
 import pandas as pd
 
-from args import parse_args
+from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
 from sts.utils import set_seed, setdir
@@ -41,5 +41,5 @@ def main(args):
     output.to_csv(save_path, index=False)
 
 if __name__ == '__main__':
-    args = parse_args(mode="test")
+    args = get_args(mode="test")
     main(args)
