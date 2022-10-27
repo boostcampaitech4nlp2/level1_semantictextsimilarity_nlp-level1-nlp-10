@@ -8,7 +8,7 @@ from pytorch_lightning.loggers import WandbLogger
 from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
-from sts.utils import set_seed, setdir, check_param
+from sts.utils import set_seed, setdir, check_params
 
 
 data_dir = '../data'
@@ -24,7 +24,7 @@ def main(args):
     dirpath = setdir(data_dir, model_dirname, reset=False)
     
     #argparser로 받아온 parameter을 terminal에 출력하여 확인할 수 있게 합니다
-    check_param(args.model_name, args.batch_size, args.max_epoch, args.shuffle, args.learning_rate)
+    check_params(args.model_name, args.batch_size, args.max_epoch, args.shuffle, args.learning_rate, args.seed)
     
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(args.model_name, args.batch_size, args.shuffle, args.train_path, args.dev_path,

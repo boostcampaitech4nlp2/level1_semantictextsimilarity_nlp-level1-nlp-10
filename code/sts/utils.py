@@ -22,13 +22,13 @@ def setdir(dirpath, dirname=None, reset=True):
         os.mkdir(filepath)
     return filepath 
 
-def check_param(modelname, batchsize, maxepoch, shuffle, lr, seed):
+def check_params(model_name, batch_size, max_epoch, shuffle, lr, seed):
     print('-'*40)
     print('********CHECK PARAMETERS********')
-    print('MODEL NAME', modelname)
-    print('BATCH SIZE', batchsize)
-    print('MAX EPOCH', maxepoch)
-    print('SHUFFLE', shuffle)
-    print('LEARNING RATE', lr)
-    print('SEED', seed)
+    print('MODEL NAME    |', model_name)
+    print('BATCH SIZE    |', batch_size)
+    print('MAX EPOCH     |', max_epoch)
+    print('SHUFFLE       |', shuffle)
+    print('LEARNING RATE |', lr)
+    print('SEED          |', seed)
     print('-'*40)
