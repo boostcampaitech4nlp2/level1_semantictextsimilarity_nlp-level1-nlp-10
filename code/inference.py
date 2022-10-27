@@ -5,10 +5,11 @@ import pandas as pd
 from args import parse_args
 from sts.dataloader import Dataloader
 from sts.model import Model
-from sts.utils import set_seed
+from sts.utils import set_seed, setdir
 
 def main(args):
     set_seed(args.seed)
+    setdir('../data', 'submissions', reset=False)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     args.device = device
     
