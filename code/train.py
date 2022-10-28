@@ -11,17 +11,12 @@ from sts.model import Model
 from sts.utils import set_seed, setdir, check_params
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-data_dir = '../data'
-model_dirname = 'saved_models'
 
 def main(args):
-    global data_dir 
-    global model_dir
-    
     set_seed(args.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     args.device = device
-    dirpath = setdir(data_dir, model_dirname, reset=False)
+    dirpath = setdir(args.data_dir, args.model_dir, reset=False)
     
     #argparser로 받아온 parameter을 terminal에 출력하여 확인할 수 있게 합니다
     check_params(args.model_name, args.batch_size, args.max_epoch, args.shuffle, args.learning_rate, args.seed)

@@ -8,16 +8,13 @@ from sts.dataloader import Dataloader
 from sts.model import Model
 from sts.utils import set_seed, setdir
 
-data_dir = '../data'
-save_dirname = 'saved_models'
-
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def main(args):
     set_seed(args.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     args.device = device
-    dirpath = setdir(data_dir,save_dirname, reset=False)
+    dirpath = setdir(args.data_dir, args.model_dir, reset=False)
     
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(args)
