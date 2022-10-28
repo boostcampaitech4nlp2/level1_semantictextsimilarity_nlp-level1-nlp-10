@@ -28,7 +28,7 @@ def main(args):
     
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(args.model_name, args.batch_size, args.shuffle, args.train_path, args.dev_path,
-                            args.test_path, args.predict_path)
+                            args.test_path, args.predict_path, args.clean)
     model = Model(args.model_name, args.learning_rate)
 
     model_name = args.model_name.replace('/','_')

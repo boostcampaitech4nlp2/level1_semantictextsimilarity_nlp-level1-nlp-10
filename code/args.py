@@ -18,4 +18,5 @@ def get_args(mode="train"):
     parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--save_model', default=True)
     parser.add_argument('--wandb', default=True)
+    parser.add_argument('--clean', default=False)
     return parser.parse_args(sys.argv[1:])

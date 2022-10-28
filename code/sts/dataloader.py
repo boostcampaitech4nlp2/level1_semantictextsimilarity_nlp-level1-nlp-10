@@ -4,6 +4,7 @@ import pytorch_lightning as pl
 import pandas as pd
 from tqdm.auto import tqdm
 import re
+import numpy as np
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -25,7 +26,7 @@ class Dataset(torch.utils.data.Dataset):
 
 
 class Dataloader(pl.LightningDataModule):
-    def __init__(self, model_name, batch_size, shuffle, train_path, dev_path, test_path, predict_path):
+    def __init__(self, model_name, batch_size, shuffle, train_path, dev_path, test_path, predict_path, clean):
         super().__init__()
         self.model_name = model_name
         self.batch_size = batch_size
@@ -35,6 +36,10 @@ class Dataloader(pl.LightningDataModule):
         self.dev_path = dev_path
         self.test_path = test_path
         self.predict_path = predict_path
+        if clean == True or clean == 'True' or clean == 'true':
+            self.clean = True
+        else:
+            self.clean = False
 
         self.train_dataset = None
         self.val_dataset = None
@@ -46,18 +51,24 @@ class Dataloader(pl.LightningDataModule):
         self.delete_columns = ['id']
         self.text_columns = ['sentence_1', 'sentence_2']
 
-        # 제거할 특수문자 (, ?, ! 제외)
+        # 제거할 특수문자 (',', ?, !, '.' 제외)
         self.punctuation = '[-=+#/\:^@*\"※~&%ㆍ』\\‘|\(\)\[\]\<\>`\'…》]'
 
     def tokenizing(self, dataframe):
         data = []
         for idx, item in tqdm(dataframe.iterrows(), desc='tokenizing', total=len(dataframe)):
             # 두 입력 문장을 [SEP] 토큰으로 이어붙여서 전처리합니다.
-            # 특수문자 제거 포함 
-            text = '[SEP]'.join([re.sub(self.punctuation, '', item[text_column]) for text_column in self.text_columns])
+            text = '[SEP]'.join([item[text_column] for text_column in self.text_columns])
             outputs = self.tokenizer(text, add_special_tokens=True, padding='max_length', truncation=True)
             data.append(outputs['input_ids'])
         return data
+
+    def remove_punctuation(self, dataframe):
+        df = dataframe.copy()
+        sentences = df[self.text_columns].values
+        refined_sentences = np.array(list(map(lambda x: [re.sub(self.punctuation, '', x[0]), re.sub(self.punctuation, '', x[1])], sentences)))
+        df[self.text_columns] = refined_sentences
+        return df
 
     def preprocessing(self, data):
         # 안쓰는 컬럼을 삭제합니다.
@@ -69,7 +80,9 @@ class Dataloader(pl.LightningDataModule):
         except:
             targets = []
 
-        # 특수문자 제거
+        # 특수문자를 제거해야 할 경우 제거합니다.
+        if self.clean:
+            data = self.remove_punctuation(data)
 
         # 텍스트 데이터를 전처리합니다.
         inputs = self.tokenizing(data)
