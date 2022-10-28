@@ -3,6 +3,7 @@ import transformers
 import pytorch_lightning as pl
 import pandas as pd
 from tqdm.auto import tqdm
+import re
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -45,11 +46,15 @@ class Dataloader(pl.LightningDataModule):
         self.delete_columns = ['id']
         self.text_columns = ['sentence_1', 'sentence_2']
 
+        # 제거할 특수문자 (, ?, ! 제외)
+        self.punctuation = '[-=+#/\:^@*\"※~&%ㆍ』\\‘|\(\)\[\]\<\>`\'…》]'
+
     def tokenizing(self, dataframe):
         data = []
         for idx, item in tqdm(dataframe.iterrows(), desc='tokenizing', total=len(dataframe)):
             # 두 입력 문장을 [SEP] 토큰으로 이어붙여서 전처리합니다.
-            text = '[SEP]'.join([item[text_column] for text_column in self.text_columns])
+            # 특수문자 제거 포함 
+            text = '[SEP]'.join([re.sub(self.punctuation, '', item[text_column]) for text_column in self.text_columns])
             outputs = self.tokenizer(text, add_special_tokens=True, padding='max_length', truncation=True)
             data.append(outputs['input_ids'])
         return data
@@ -63,6 +68,9 @@ class Dataloader(pl.LightningDataModule):
             targets = data[self.target_columns].values.tolist()
         except:
             targets = []
+
+        # 특수문자 제거
+
         # 텍스트 데이터를 전처리합니다.
         inputs = self.tokenizing(data)
 
