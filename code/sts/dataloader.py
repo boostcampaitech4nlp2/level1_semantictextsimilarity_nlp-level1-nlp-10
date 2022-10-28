@@ -43,7 +43,7 @@ class Dataloader(pl.LightningDataModule):
         self.use_dev = args.use_dev
         self.train_ratio = args.train_ratio
         self.num_workers = None
-        if args.clean == True or args.clean == 'True', or args.clean == 'true':
+        if args.clean == True or args.clean == 'True' or args.clean == 'true':
             self.clean = True
         else:
             self.clean = False
