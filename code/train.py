@@ -26,12 +26,21 @@ def main(args):
     model = Model(args.model_name, args.learning_rate)
 
     model_name = args.model_name.replace('/','_')
+    
+    # checkpoint 
+    ckpt_dirpath = setdir(args.data_dir, 'ckpt', reset=False)
+    checkpoint_callback = pl.callbacks.ModelCheckpoint(filename='{epoch:02d}_{val_loss:.4f}',
+                                                  save_top_k=1, dirpath=ckpt_dirpath, monitor='val_loss', mode='min')
+    
+    # learning-rate 모니터링 callback함수
+    lr_monitor = pl.callbacks.LearningRateMonitor(logging_interval='step')
     # wandb 설정
     if args.wandb:
         wandb_logger = WandbLogger(project=model_name,
                                    save_dir = '../data/wandb_checkpoints')
         trainer = pl.Trainer(accelerator='gpu', devices=1,
-                             max_epochs=args.max_epoch, log_every_n_steps=1, logger=wandb_logger)
+                             max_epochs=args.max_epoch, log_every_n_steps=1, logger=wandb_logger,
+                             callbacks=[lr_monitor, checkpoint_callback])
     else:
         # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
         trainer = pl.Trainer(accelerator='gpu', devices=1,
@@ -43,7 +52,6 @@ def main(args):
     trainer.test(model=model, datamodule=dataloader)
 
     # 학습이 완료된 모델을 저장합니다.
-    # TODO: 중복 이름으로 덮어쓰기 되는 상황을 막으려면 랜덤 변수를 따로 이름에 설정해야 할 듯.
     if args.save_model:
         model_name += args.version
         filename = mk_filename(model_name, format='pt')
