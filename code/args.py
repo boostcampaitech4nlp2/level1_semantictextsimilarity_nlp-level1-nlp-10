@@ -24,7 +24,6 @@ def get_args(mode="train"):
     parser.add_argument('--predict_path', default='../data/test.csv')
     parser.add_argument('--data_dir', default= '../data')
     parser.add_argument('--model_dir', default= 'saved_models')
-    parser.add_argument('--save_dir', default= 'submissions')
     # K-fold
     parser.add_argument('--num_folds', default=5, type=int)
     parser.add_argument('--train_ratio', default=0.8)
