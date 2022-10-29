@@ -10,6 +10,7 @@ def get_args(mode="train"):
     # 유지관리
     parser.add_argument('--version', default='', type=str)
     parser.add_argument('--model_name', default='klue/roberta-small', type=str)
+    parser.add_argument('--saved_model_name',type=str, required=False)
     parser.add_argument('--shuffle', default=True)
     parser.add_argument('--save_model', default=True)
     parser.add_argument('--wandb', default=True)
@@ -24,6 +25,7 @@ def get_args(mode="train"):
     parser.add_argument('--predict_path', default='../data/test.csv')
     parser.add_argument('--data_dir', default= '../data')
     parser.add_argument('--model_dir', default= 'saved_models')
+    parser.add_argument('--save_dir', default= 'submissions')
     # K-fold
     parser.add_argument('--num_folds', default=5, type=int)
     parser.add_argument('--train_ratio', default=0.8)

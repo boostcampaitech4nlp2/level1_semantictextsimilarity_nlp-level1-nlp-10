@@ -32,3 +32,10 @@ def check_params(model_name, batch_size, max_epoch, shuffle, lr, seed):
     print('LEARNING RATE |', lr)
     print('SEED          |', seed)
     print('-'*40)
+     
+def mk_filename(model_name, format):
+    from datetime import datetime
+    now = datetime.now()
+    cur_time = now.strftime("%m%d%H%M%S")  
+    filename = f'{model_name}_{cur_time}.{format}'
+    return filename
