@@ -6,7 +6,7 @@ import pandas as pd
 from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
-from sts.utils import set_seed, setdir
+from sts.utils import set_seed, setdir, mk_filename
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -14,7 +14,7 @@ def main(args):
     set_seed(args.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     args.device = device
-    dirpath = setdir(args.data_dir, args.model_dir, reset=False)
+    dirpath = setdir(args.data_dir, args.save_dir, reset=False)
     
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(args)
@@ -38,8 +38,8 @@ def main(args):
     # output 형식을 불러와서 예측된 결과로 바꿔주고, output.csv로 출력합니다.
     output = pd.read_csv('../data/sample_submission.csv')
     output['target'] = predictions
-    
-    save_path = os.path.join(dirpath, f'{model_name}.csv')
+    filename = mk_filename(model_name, format='csv')
+    save_path = os.path.join(dirpath, filename)
     output.to_csv(save_path, index=False)
 
 if __name__ == '__main__':
