@@ -9,7 +9,7 @@ from sts.model import Model
 from sts.utils import set_seed, setdir
 
 data_dir = '../data'
-save_dirname = 'saved_models'
+save_dirname = 'submissions'
 
 def main(args):
     set_seed(args.seed)
@@ -27,6 +27,7 @@ def main(args):
     model_name = args.model_name.replace('/','_')
     # Inference part
     # 저장된 모델로 예측을 진행합니다.
+    print(model_name)
     model = torch.load(f'../data/saved_models/{model_name}.pt')
     predictions = trainer.predict(model=model, datamodule=dataloader)
 
@@ -37,7 +38,7 @@ def main(args):
     output = pd.read_csv('../data/sample_submission.csv')
     output['target'] = predictions
     
-    save_path = os.path.join(dirpath, f'{model_name}.pt')
+    save_path = os.path.join(dirpath, f'{model_name}.csv')
     output.to_csv(save_path, index=False)
 
 if __name__ == '__main__':
