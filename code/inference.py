@@ -25,9 +25,7 @@ def main(args):
     model_name = args.model_name.replace('/','_') + args.version
     # Inference part
     # 저장된 모델로 예측을 진행합니다.
-
     print(f'Load Model:{model_name}.pt...')
-
     model = torch.load(f'../data/saved_models/{model_name}.pt')
     print(f'Make predictions....')
     predictions = trainer.predict(model=model, datamodule=dataloader)
@@ -38,6 +36,7 @@ def main(args):
     # output 형식을 불러와서 예측된 결과로 바꿔주고, output.csv로 출력합니다.
     output = pd.read_csv('../data/sample_submission.csv')
     output['target'] = predictions
+
     filename = mk_filename(model_name, format='csv')
     save_path = os.path.join(dirpath, filename)
     output.to_csv(save_path, index=False)
