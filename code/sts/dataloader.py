@@ -6,6 +6,8 @@ import pytorch_lightning as pl
 import pandas as pd
 from tqdm.auto import tqdm
 from sklearn.model_selection import KFold
+import re
+import numpy as np
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -41,6 +43,10 @@ class Dataloader(pl.LightningDataModule):
         self.use_dev = args.use_dev
         self.train_ratio = args.train_ratio
         self.num_workers = None
+        if args.clean == True or args.clean == 'True' or args.clean == 'true':
+            self.clean = True
+        else:
+            self.clean = False
 
         self.train_dataset = None
         self.val_dataset = None
@@ -60,6 +66,9 @@ class Dataloader(pl.LightningDataModule):
             num_workers = 0
         self.num_workers = num_workers
 
+        # 제거할 특수문자 (',', ?, !, '.' 제외)
+        self.punctuation = '[-=+#/\:^@*\"※~&%ㆍ』\\‘|\(\)\[\]\<\>`\'…》]'
+
     def tokenizing(self, dataframe):
         data = []
         for idx, item in tqdm(dataframe.iterrows(), desc='tokenizing', total=len(dataframe)):
@@ -68,6 +77,13 @@ class Dataloader(pl.LightningDataModule):
             outputs = self.tokenizer(text, add_special_tokens=True, padding='max_length', truncation=True)
             data.append(outputs['input_ids'])
         return data
+
+    def remove_punctuation(self, dataframe):
+        df = dataframe.copy()
+        sentences = df[self.text_columns].values
+        refined_sentences = np.array(list(map(lambda x: [re.sub(self.punctuation, '', x[0]), re.sub(self.punctuation, '', x[1])], sentences)))
+        df[self.text_columns] = refined_sentences
+        return df
 
     def preprocessing(self, data):
         # 안쓰는 컬럼을 삭제합니다.
@@ -78,6 +94,11 @@ class Dataloader(pl.LightningDataModule):
             targets = data[self.target_columns].values.tolist()
         except:
             targets = []
+
+        # 특수문자를 제거해야 할 경우 제거합니다.
+        if self.clean:
+            data = self.remove_punctuation(data)
+
         # 텍스트 데이터를 전처리합니다.
         inputs = self.tokenizing(data)
 
