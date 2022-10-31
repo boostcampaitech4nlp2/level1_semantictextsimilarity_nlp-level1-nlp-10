@@ -33,7 +33,7 @@ def check_params(model_name, batch_size, max_epoch, shuffle, lr, seed):
     print('SEED          |', seed)
     print('-'*40)
      
-def make_filename(model_name, format):
+def make_file_name(model_name, format):
     from datetime import datetime
     now = datetime.now()
     cur_time = now.strftime("%m%d%H%M%S")  
