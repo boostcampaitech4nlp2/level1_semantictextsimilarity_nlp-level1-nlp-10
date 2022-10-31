@@ -37,8 +37,8 @@ def main(args):
     # output 형식을 불러와서 예측된 결과로 바꿔주고, output.csv로 출력합니다.
     output = pd.read_csv('../data/sample_submission.csv')
     output['target'] = predictions
-    filename = mk_filename(model_name, format='csv')
-    save_path = os.path.join(dirpath, filename)
+    file_name = mk_filename(model_name, format='csv')
+    save_path = os.path.join(dirpath, file_name)
     output.to_csv(save_path, index=False)
 
 if __name__ == '__main__':

@@ -54,8 +54,8 @@ def main(args):
     # 학습이 완료된 모델을 저장합니다.
     if args.save_model:
         model_name += args.version
-        filename = mk_filename(model_name, format='pt')
-        model_path = os.path.join(dirpath, filename)
+        file_name = mk_filename(model_name, format='pt')
+        model_path = os.path.join(dirpath, file_name)
         torch.save(model, model_path)
 
 

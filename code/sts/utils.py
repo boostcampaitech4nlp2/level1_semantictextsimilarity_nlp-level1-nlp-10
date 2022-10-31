@@ -37,5 +37,5 @@ def mk_filename(model_name, format):
     from datetime import datetime
     now = datetime.now()
     cur_time = now.strftime("%m%d%H%M%S")  
-    filename = f'{model_name}_{cur_time}.{format}'
-    return filename
+    file_name = f'{model_name}_{cur_time}.{format}'
+    return file_name
