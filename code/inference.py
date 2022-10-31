@@ -38,7 +38,7 @@ def main(args):
     output = pd.read_csv('../data/sample_submission.csv')
     output['target'] = predictions
     filename = mk_filename(model_name, format='csv')
-    save_path = os.path.join(dirpath, f'{model_name}.pt')
+    save_path = os.path.join(dirpath, filename)
     output.to_csv(save_path, index=False)
 
 if __name__ == '__main__':
