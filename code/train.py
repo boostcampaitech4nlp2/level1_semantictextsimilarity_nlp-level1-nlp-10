@@ -8,7 +8,7 @@ from pytorch_lightning.loggers import WandbLogger
 from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
-from sts.utils import set_seed, setdir, check_params, mk_filename
+from sts.utils import set_seed, setdir, check_params, make_file_name
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -54,8 +54,8 @@ def main(args):
     # 학습이 완료된 모델을 저장합니다.
     if args.save_model:
         model_name += args.version
-        filename = mk_filename(model_name, format='pt')
-        model_path = os.path.join(dirpath, filename)
+        file_name = make_file_name(model_name, format='pt')
+        model_path = os.path.join(dirpath, file_name)
         torch.save(model, model_path)
 
 

@@ -68,3 +68,27 @@ class KfoldModel(Model):
         logits = self(x)
 
         self.log("k_test_pearson", torchmetrics.functional.pearson_corrcoef(logits.squeeze(), y.squeeze()))
+        
+class HuberModel(Model):
+    def __init__(self, model_name, lr):
+        super().__init__(model_name=model_name, lr=lr)
+        
+        self.loss_func2 = torch.nn.HuberLoss()        
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        logits = self(x)
+        loss = self.loss_func(logits, y.float()) + self.loss_func2(logits, y.float())
+        self.log("train_loss", loss)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        logits = self(x)
+        loss = self.loss_func(logits, y.float()) + self.loss_func2(logits, y.float())
+        self.log("val_loss", loss)
+
+        self.log("val_pearson", torchmetrics.functional.pearson_corrcoef(logits.squeeze(), y.squeeze()))
+
+        return loss
