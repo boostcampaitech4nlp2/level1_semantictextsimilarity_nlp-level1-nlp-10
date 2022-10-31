@@ -69,7 +69,7 @@ class KfoldModel(Model):
 
         self.log("k_test_pearson", torchmetrics.functional.pearson_corrcoef(logits.squeeze(), y.squeeze()))
         
-class Model_Huber(Model):
+class HuberModel(Model):
     def __init__(self, model_name, lr):
         super().__init__(model_name=model_name, lr=lr)
         
