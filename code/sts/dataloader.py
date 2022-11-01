@@ -8,7 +8,7 @@ from tqdm.auto import tqdm
 from sklearn.model_selection import KFold
 import re
 import numpy as np
-from utils import convert_boolean_args
+from .utils import convert_boolean_args
 
 
 class Dataset(torch.utils.data.Dataset):
