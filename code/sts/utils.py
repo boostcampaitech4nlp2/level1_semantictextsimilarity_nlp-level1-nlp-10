@@ -39,3 +39,8 @@ def make_file_name(model_name, format):
     cur_time = now.strftime("%m%d%H%M%S")  
     file_name = f'{model_name}_{cur_time}.{format}'
     return file_name
+
+def convert_boolean_args(arg):
+    if arg in ['true', 'True', 't', 'T']:
+        return True
+    return False
