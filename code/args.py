@@ -8,9 +8,8 @@ def get_args(mode="train"):
     
     parser.add_argument('--seed', default=42, type=int)
     # 유지관리
-    parser.add_argument('--version', default='', type=str)
+    parser.add_argument('--version', default='', type=str, required=True)
     parser.add_argument('--model_name', default='klue/roberta-small', type=str)
-    parser.add_argument('--saved_model_name',type=str, required=False)
     parser.add_argument('--shuffle', default=True)
     parser.add_argument('--save_model', default=True)
     parser.add_argument('--wandb', default=True)
@@ -29,10 +28,13 @@ def get_args(mode="train"):
     # K-fold
     parser.add_argument('--num_folds', default=5, type=int)
     parser.add_argument('--train_ratio', default=0.8)
+    # checkpoint loader
+    parser.add_argument('--checkpoint_path', default = '')
     # dev 데이터를 포함하여 학습시킬지 결정합니다.
     parser.add_argument('--use_dev',
                         help="Use dev data to train model. Use when you're going to submit.",
                         default=False)
     # 특수문자를 제거할지 결정합니다.
     parser.add_argument('--clean', default=False)
+    
     return parser.parse_args(sys.argv[1:])

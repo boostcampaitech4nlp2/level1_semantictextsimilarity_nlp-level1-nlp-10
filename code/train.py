@@ -29,8 +29,8 @@ def main(args):
     
     # checkpoint 
     ckpt_dirpath = setdir(args.data_dir, 'ckpt', reset=False)
-    checkpoint_callback = pl.callbacks.ModelCheckpoint(filename='{epoch:02d}_{val_loss:.4f}',
-                                                  save_top_k=1, dirpath=ckpt_dirpath, monitor='val_loss', mode='min')
+    checkpoint_callback = pl.callbacks.ModelCheckpoint(filename='{model_name}_{epoch:02d}_{val_loss:.4f}',
+                                                  save_top_k=1, dirpath=ckpt_dirpath, monitor='val_pearson', mode='min')
     
     # learning-rate 모니터링 callback함수
     lr_monitor = pl.callbacks.LearningRateMonitor(logging_interval='step')
@@ -53,8 +53,7 @@ def main(args):
 
     # 학습이 완료된 모델을 저장합니다.
     if args.save_model:
-        model_name += args.version
-        file_name = make_file_name(model_name, format='pt')
+        file_name = make_file_name(model_name, format='pt', version=args.version)
         model_path = os.path.join(dirpath, file_name)
         torch.save(model, model_path)
 
