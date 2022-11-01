@@ -34,4 +34,7 @@ def get_args(mode="train"):
     parser.add_argument('--use_dev',
                         help="Use dev data to train model. Use when you're going to submit.",
                         default=False)
+    # 특수문자를 제거할지 결정합니다.
+    parser.add_argument('--clean', default=False)
+    
     return parser.parse_args(sys.argv[1:])
