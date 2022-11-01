@@ -26,7 +26,7 @@ def main(args):
     # Inference part
     # 저장된 모델로 예측을 진행합니다.
     model_name = args.model_name.replace('/','_') + '_' + args.version
-    if args.use_checkpoint:
+    if args.checkpoint_path:
         model = Model(args.model_name, args.learning_rate)
         model = model.load_from_checkpoint(args.checkpoint_path)
     else:
