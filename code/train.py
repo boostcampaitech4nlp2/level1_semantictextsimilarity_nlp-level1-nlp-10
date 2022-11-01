@@ -7,7 +7,7 @@ from pytorch_lightning.loggers import WandbLogger
 
 from args import get_args
 from sts.dataloader import Dataloader
-from sts.model import Model
+from sts.model import Model, EnsembleModel
 from sts.utils import set_seed, setdir, check_params, make_file_name
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -18,14 +18,22 @@ def main(args):
     args.device = device
     dirpath = setdir(args.data_dir, args.model_dir, reset=False)
     
-    #argparser로 받아온 parameter을 terminal에 출력하여 확인할 수 있게 합니다
-    check_params(args.model_name, args.batch_size, args.max_epoch, args.shuffle, args.learning_rate, args.seed)
     
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(args)
-    model = Model(args.model_name, args.learning_rate)
-
-    model_name = args.model_name.replace('/','_')
+    if not args.voting_models:
+        #argparser로 받아온 parameter을 terminal에 출력하여 확인할 수 있게 합니다
+        check_params(args.model_name, args.batch_size, args.max_epoch, args.shuffle, args.learning_rate, args.seed)
+    
+        model = Model(args.model_name, args.learning_rate)
+        model_name = args.model_name.replace('/','_')
+    else:
+        print('Start Ensemble Learning...')
+        for voting_model_name in args.voting_models:
+            check_params(voting_model_name, args.batch_size, args.max_epoch, args.shuffle, args.learning_rate, args.seed)
+        model = VotingModel(args.voting_models, args.learning_rate)
+        model_name = model.model_name
+        print(model_name)
     
     # checkpoint 
     ckpt_dirpath = setdir(args.data_dir, 'ckpt', reset=False)

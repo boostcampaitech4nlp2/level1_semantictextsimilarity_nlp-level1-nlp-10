@@ -25,11 +25,14 @@ def get_args(mode="train"):
     parser.add_argument('--data_dir', default= '../data')
     parser.add_argument('--model_dir', default= 'saved_models')
     parser.add_argument('--save_dir', default= 'submissions')
+    # checkpoint loader
+    parser.add_argument('--checkpoint_path', default = '')
     # K-fold
     parser.add_argument('--num_folds', default=5, type=int)
     parser.add_argument('--train_ratio', default=0.8)
-    # checkpoint loader
-    parser.add_argument('--checkpoint_path', default = '')
+    # ensemble 
+    parser.add_argument('-vot', '--voting_models', default=[], nargs='+', help='<Required> Set flag')
+    # parser.add_argument('--voting_models', default=('klue/roberta-small', 'klue/roberta-small'), type=tuple)
     # dev 데이터를 포함하여 학습시킬지 결정합니다.
     parser.add_argument('--use_dev',
                         help="Use dev data to train model. Use when you're going to submit.",
