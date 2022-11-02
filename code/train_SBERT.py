@@ -1,36 +1,27 @@
+import sys
 import os
+import math
+from datetime import datetime
 from subprocess import check_output
-import torch
-import pytorch_lightning as pl
-
-from pytorch_lightning.loggers import WandbLogger
-
 from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
 from sts.utils import set_seed, setdir, check_params, make_file_name
-from sentence_transformers import SentenceTransformer, models
-from datetime import datetime
-from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
-import pandas as pd
-from sentence_transformers import losses
-import math
-from datetime import datetime
-import sys
+import torch
+import torchmetrics
 from torch.utils.data import DataLoader
+import pytorch_lightning as pl
+from pytorch_lightning.loggers import WandbLogger
+import pandas as pd
+from tqdm import tqdm
+from sentence_transformers import SentenceTransformer, models
+from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
+from sentence_transformers import losses
 from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
 from sentence_transformers import SentenceTransformer, models
-from tqdm import tqdm
 from sentence_transformers.readers import InputExample
 from sentence_transformers.util import batch_to_device
-
-'''
-모델 load
- - SentenceTransformer.load(input_path)
-   - 그냥 저장할 때 사용한 경로를 그대로 사용하는 듯
-'''
-    
-
+from sklearn.metrics.pairwise import paired_cosine_distances
 
 
 def main(args):
@@ -50,20 +41,17 @@ def main(args):
     train_df = pd.read_csv(args.train_path)
     dev_df = pd.read_csv(args.dev_path)
     train_examples = make_sts_input_example(train_df)
-    dev_examples = make_sts_input_example(dev_df)
 
     train_dataloader = DataLoader(
         train_examples,
         shuffle=True,
         batch_size=batch_size
     )
-    dev_ㅇㅁㅅㅁloader = DataLoader(
-        dev_examples,
-        batch_size=batch_size
-    )
+    dev_data = convert2data(dev_df)
+    
     
     # 2. embedding 모델과 pooling 모델을 생성하고 SentenceTransformer로 연결합니다.
-    model_name = 'klue/roberta-base'
+    model_name = args.model_name
     #model_name = 'klue/roberta-large'
     embedding_model = models.Transformer(
         model_name_or_path=model_name,
@@ -99,6 +87,8 @@ def main(args):
     )
     
     # 4. 여기에 dev.csv로 pearson 점수를 계산하는 부분이 필요합니다!
+    score = evaluate(model, *dev_data, batch_size=batch_size)
+    print(f'test_pearson : {score}')
     
     
 # input data를 InputExample 데이터들의 리스트로 만들어서 리턴합니다.
@@ -114,38 +104,27 @@ def make_sts_input_example(dataset):
 
 # dev.csv로 pearson 점수를 계산하는 함수를 만들어보는 중입니다.
 # 현재 밑에 load_test() 함수 안에서 사용되고 있습니다.
-def evaluate(model, dataloader):
-    model.eval()
-    dataloader.collate_fn = model.smart_batching_collate
-    device = model._target_device
-    with torch.no_grad():
-        embeddings
-        for features, labels in dataloader:
-            # features, model, labels를 같은 메모리에 올려놓기
-            features = list(map(lambda batch: batch_to_device(batch, model._target_device), features))
-            model.to(device)
-            labels = labels.to(device)
-            '''
-            https://github.com/UKPLab/sentence-transformers/blob/master/sentence_transformers/SentenceTransformer.py
-            https://github.com/UKPLab/sentence-transformers/blob/83eeb5a7b9b81d17a235d76e101cc2912ee1a30d/sentence_transformers/util.py#L300
-            https://github.com/UKPLab/sentence-transformers/blob/master/sentence_transformers/evaluation/EmbeddingSimilarityEvaluator.py
-            https://github.com/UKPLab/sentence-transformers/blob/master/sentence_transformers/losses/CosineSimilarityLoss.py
-            https://github.com/UKPLab/sentence-transformers/blob/83eeb5a7b9b81d17a235d76e101cc2912ee1a30d/sentence_transformers/evaluation/SentenceEvaluator.py#L1
-            https://github.com/Lightning-AI/lightning/blob/master/src/pytorch_lightning/trainer/trainer.py
-            
-            EmbeddingSimilarityEvaluator가 어떻게 evaluate하는지 봐야 함.
-            이에 따라 Models.encode()부분도 볼 필요가 있는 듯.
-            Models.encode() 부분은 for문을 돌 필요 없이 한번에 알아서 처리하는 듯.
-            '''
-            pred = model(features, labels)
-            
-        
-# 기존 코드에서 pearson 점수를 계산하는 부분입니다.
-def test_step(self, batch, batch_idx):
-        x, y = batch
-        logits = self(x)
+def evaluate(model, st1, st2, labels, batch_size, save_result=False):
+    #dataloader.collate_fn = model.smart_batching_collate
+    emb1 = model.encode(st1, batch_size=batch_size, convert_to_numpy=True)
+    emb2 = model.encode(st2, batch_size=batch_size, convert_to_numpy=True)
+    
+    # 1에서 cosine_distance를 빼는 것으로 cosine_score를 구합니다.
+    # 그리고 데이터의 label 부분과 수치를 맞춰주기 위해 5를 곱했고, 0보다 작은 데이터는 0으로 설정했습니다.
+    cosine_scores = 1 - (paired_cosine_distances(emb1, emb2))
+    cosine_scores = cosine_scores * 5
+    condition = cosine_scores < 0
+    cosine_scores[condition] = 0
 
-        self.log("test_pearson", torchmetrics.functional.pearson_corrcoef(logits.squeeze(), y.squeeze()))
+    cosine_scores = torch.FloatTensor(cosine_scores)
+    labels = torch.FloatTensor(labels)
+    pearson = torchmetrics.functional.pearson_corrcoef(cosine_scores, labels)
+    
+    if save_result:
+        return pearson.item(), cosine_scores
+    else:
+        return pearson.item()
+        
     
 # 모델을 불러온 뒤 dev.csv 파일을 사용하여 점수를 계산하는 함수입니다.
 def load_test(args, model_path):
@@ -153,15 +132,25 @@ def load_test(args, model_path):
     model = SentenceTransformer.load(model_path)
     
     dev_df = pd.read_csv(args.dev_path)
-    dev_examples = make_sts_input_example(dev_df)
-    
-    dataloader = DataLoader(
-        dev_examples,
-    )
-    evaluate(model, dataloader)
-    
+    st1, st2, labels = convert2data(dev_df)
+    evaluate(model, st1, st2, labels, batch_size=1)
+
+# dev.scv 사용할 때 모든 데이터를 모델에게 한번에 줘야 해서 dataloder를 사용하지 않고 바로 tensor로 바꾸는 함수입니다.
+def convert2data(df: pd.DataFrame):
+    sentences1 = []
+    sentences2 = []
+    labels = []
+    for i, data in tqdm(df.iterrows(), desc='SBERT inference_datas', total=len(df)):
+        st1 = data['sentence_1']
+        st2 = data['sentence_2']
+        score = (data['label']) * 1.0
+        sentences1.append(st1)
+        sentences2.append(st2)
+        labels.append(score)
+    return sentences1, sentences2, labels
     
 if __name__ == '__main__':
     args = get_args(mode="train")
-    #main(args)
-    #load_test(args, 'data/sbert/klue-roberta-base/2022-11-01_17-37-29_epochs1/')
+    main(args)
+    model_path = '/opt/ml/Test/models/klue-roberta-base/2022-11-01_06-46-27_epochs20'
+    #load_test(args, model_path)
