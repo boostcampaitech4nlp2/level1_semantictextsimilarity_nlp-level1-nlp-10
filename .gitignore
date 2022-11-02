@@ -1,7 +1,8 @@
 ### Dataset
 data/
 code/lightning_logs
-​
+​*/*.sh​
+
 # macOS + Windows
 .DS_Store
 ._*
@@ -20,7 +21,7 @@ Thumbs.db
 ​
 # Built Visual Studio Code Extensions
 *.vsix
-​
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -177,7 +177,8 @@ class KfoldDataloader(Dataloader):
             targets = []
             
         try:
-            targets2 = data[['binary-label']].values.tolist()
+            print(data[self.target_columns].round(0).head(5))
+            targets2 = data[self.target_columns].round(0).values.tolist()
         except:
             targets2 = []
             
