@@ -5,8 +5,8 @@ import pandas as pd
 
 from args import get_args
 from sts.dataloader import Dataloader
-from sts.model import Model
-from sts.utils import set_seed, setdir, make_file_name
+from sts.model import Model, VotingModel
+from utils import set_seed, setdir, make_file_name, hard_voting
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -29,8 +29,12 @@ def main(args):
     if args.checkpoint_path:
         model = Model(args.model_name, args.learning_rate)
         model = model.load_from_checkpoint(args.checkpoint_path)
+    elif args.voting_models:
+        model = VotingModel(args.voting_models, args.learning_rate)
+        model.load_state_dict(torch.load(f'../data/saved_models/{model.model_name}_{args.version}.pt'))
     else:
-        model = torch.load(f'../data/saved_models/{model_name}.pt')
+        model = Model(args.model_name, args.learning_rate)
+        model.load_state_dict(torch.load(f'../data/saved_models/{model_name}.pt'))
     
     print(f'Load Model:{model_name}...')
     trainer.test(model=model, datamodule=dataloader) #dev pearson 확인
@@ -50,4 +54,7 @@ def main(args):
 
 if __name__ == '__main__':
     args = get_args(mode="test")
-    main(args)
+    if args.use_hard_voting:
+        hard_voting('../data/submissions', args.voting_submissions, args.version)
+    else:
+        main(args)
