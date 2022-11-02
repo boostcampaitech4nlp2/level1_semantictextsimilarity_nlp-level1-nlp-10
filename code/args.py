@@ -36,6 +36,4 @@ def get_args(mode="train"):
                         default=False)
     # 특수문자를 제거할지 결정합니다.
     parser.add_argument('--clean', default=False)
-    # SBERT 사용 여부를 결정합니다.
-    parser.add_argument('--sbert', default=False)
     return parser.parse_args(sys.argv[1:])

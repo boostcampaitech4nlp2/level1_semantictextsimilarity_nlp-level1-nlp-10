@@ -65,11 +65,9 @@ def main(args):
     )
 
     model = SentenceTransformer(modules=[embedding_model, pooling_model])
-    '''
+    
     if args.wandb:
-        wnadb.login()
-        wandb_logger = WandbLogger(project=model_name, save_dir = '../data/wandb_checkpoints')
-    '''
+        wandb.login()
     
     # 3. 모델 저장 경로를 지정하고 model.fit()으로 학습합니다.
     #    losses.CosineSimilarityLoss() 함수를 사용하면 CosineSimilarityLoss을 사용하는 모델을 리턴합니다.
@@ -155,5 +153,3 @@ def convert2data(df: pd.DataFrame):
 if __name__ == '__main__':
     args = get_args(mode="train")
     main(args)
-    model_path = '/opt/ml/Test/models/klue-roberta-base/2022-11-01_06-46-27_epochs20'
-    #load_test(args, model_path)
