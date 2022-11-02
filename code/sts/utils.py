@@ -32,7 +32,12 @@ def check_params(model_name, batch_size, max_epoch, shuffle, lr, seed):
     print('LEARNING RATE |', lr)
     print('SEED          |', seed)
     print('-'*40)
-     
+
+def convert_boolean_args(arg):
+    if arg in ['true', 'True', 't', 'T']:
+        return True
+    return False
+
 def make_file_name(model_name, format,  version='v0'): 
     file_name = f'{model_name}_{version}.{format}'
     return file_name
