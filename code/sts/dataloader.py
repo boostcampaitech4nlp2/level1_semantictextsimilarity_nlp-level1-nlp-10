@@ -45,7 +45,7 @@ class Dataloader(pl.LightningDataModule):
         self.train_ratio = args.train_ratio
         self.num_workers = None
         self.clean = convert_boolean_args(args.clean)
-        self.sbert = convert_boolean_args(args.sbert)
+        # self.sbert = convert_boolean_args(args.sbert) # TODO: 인자가 없습니다.
 
         self.train_dataset = None
         self.val_dataset = None
@@ -208,7 +208,6 @@ class KfoldDataloader(Dataloader):
                 kf = KFold(n_splits=self.num_folds, shuffle=self.shuffle, random_state=self.split_seed)
                 all_splits = [k for k in kf.split(total_dataset)]
             elif self.kfold_mode == 'stratified':
-                print('stratified')
                 total_input, total_targets, total_targets2 = self.preprocessing(total_data)
                 total_dataset = Dataset(total_input, total_targets)
                 kf = StratifiedKFold(n_splits=self.num_folds, shuffle=self.shuffle, random_state=self.split_seed)

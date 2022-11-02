@@ -7,7 +7,7 @@ from pytorch_lightning.loggers import WandbLogger
 
 from args import get_args
 from sts.dataloader import Dataloader
-from sts.model import Model, EnsembleModel
+from sts.model import Model, VotingModel
 from sts.utils import set_seed, setdir, check_params, make_file_name
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
