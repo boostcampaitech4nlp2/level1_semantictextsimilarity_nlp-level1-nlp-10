@@ -1,5 +1,6 @@
-import os, random, torch
+import os, random, torch, math
 import numpy as np
+import pandas as pd
 
 def set_seed(random_seed):
     os.environ["PYTHONHASHSEED"] = str(random_seed)
@@ -41,3 +42,18 @@ def convert_boolean_args(arg):
 def make_file_name(model_name, format,  version='v0'): 
     file_name = f'{model_name}_{version}.{format}'
     return file_name
+
+def hard_voting(load_dir, submission_files, version='v0'):
+    submission = pd.read_csv('../data/sample_submission.csv')
+    for i, submission_file in enumerate(submission_files):
+        submission_path = os.path.join(load_dir, submission_file)
+        df = pd.read_csv(submission_path)
+        if i == 0:
+            submission['target'] = df['target']
+        else:
+            submission['target'] += df['target']
+    submission['target'] = round(submission['target']/len(submission_files), 1)
+    save_name = make_file_name('hard_voting', format='csv', version=version)
+    save_path = os.path.join(load_dir, save_name)
+    submission.to_csv(save_path, index=False)
+        
