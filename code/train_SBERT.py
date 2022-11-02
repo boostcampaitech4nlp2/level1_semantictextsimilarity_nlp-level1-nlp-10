@@ -15,10 +15,8 @@ from pytorch_lightning.loggers import WandbLogger
 import pandas as pd
 from tqdm import tqdm
 from sentence_transformers import SentenceTransformer, models
-from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
 from sentence_transformers import losses
 from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
-from sentence_transformers import SentenceTransformer, models
 from sentence_transformers.readers import InputExample
 from sentence_transformers.util import batch_to_device
 from sklearn.metrics.pairwise import paired_cosine_distances
@@ -67,6 +65,11 @@ def main(args):
     )
 
     model = SentenceTransformer(modules=[embedding_model, pooling_model])
+    '''
+    if args.wandb:
+        wnadb.login()
+        wandb_logger = WandbLogger(project=model_name, save_dir = '../data/wandb_checkpoints')
+    '''
     
     # 3. 모델 저장 경로를 지정하고 model.fit()으로 학습합니다.
     #    losses.CosineSimilarityLoss() 함수를 사용하면 CosineSimilarityLoss을 사용하는 모델을 리턴합니다.
