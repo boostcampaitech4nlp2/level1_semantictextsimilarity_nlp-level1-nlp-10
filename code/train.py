@@ -40,6 +40,7 @@ def main(args):
                                    save_dir = '../data/wandb_checkpoints')
         trainer = pl.Trainer(accelerator='gpu', devices=1,
                              max_epochs=args.max_epoch, log_every_n_steps=1, logger=wandb_logger,
+                             precision=16
                              callbacks=[lr_monitor, checkpoint_callback])
     else:
         # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
@@ -62,6 +63,3 @@ def main(args):
 if __name__ == '__main__':
     args = get_args(mode="train")
     main(args)
-
-
-    

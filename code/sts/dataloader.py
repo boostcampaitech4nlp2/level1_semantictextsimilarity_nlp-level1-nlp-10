@@ -45,6 +45,7 @@ class Dataloader(pl.LightningDataModule):
         self.train_ratio = args.train_ratio
         self.num_workers = None
         self.clean = convert_boolean_args(args.clean)
+        self.sbert = convert_boolean_args(args.sbert)
 
         self.train_dataset = None
         self.val_dataset = None
@@ -63,7 +64,7 @@ class Dataloader(pl.LightningDataModule):
             warnings.warn("could not infer cpu count automatically, setting it to zero")
             num_workers = 0
         self.num_workers = num_workers
-
+        
         # 제거할 특수문자 (',', ?, !, '.' 제외)
         self.punctuation = '[-=+#/\:^@*\"※~&%ㆍ』\\‘|\(\)\[\]\<\>`\'…》]'
 
