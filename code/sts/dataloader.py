@@ -5,7 +5,7 @@ import transformers
 import pytorch_lightning as pl
 import pandas as pd
 from tqdm.auto import tqdm
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 import re
 import numpy as np
 from .utils import convert_boolean_args
@@ -160,10 +160,37 @@ class Dataloader(pl.LightningDataModule):
 class KfoldDataloader(Dataloader):
     def __init__(self,args,k):
         super().__init__(args=args)
+        self.kfold_mode = args.kfold_mode
         self.k = k
         self.num_folds = args.num_folds
         self.split_seed = args.seed
         
+    def preprocessing(self, data):
+        # 안쓰는 컬럼을 삭제합니다.
+        data = data.drop(columns=self.delete_columns)
+
+        # 타겟 데이터가 없으면 빈 배열을 리턴합니다.
+        try:
+            targets = data[self.target_columns].values.tolist()
+            
+        except:
+            targets = []
+            
+        try:
+            targets2 = data[['binary-label']].values.tolist()
+        except:
+            targets2 = []
+            
+        # 특수문자를 제거해야 할 경우 제거합니다.
+        if self.clean:
+            data = self.remove_punctuation(data)
+
+        # 텍스트 데이터를 전처리합니다.
+        inputs = self.tokenizing(data)
+
+        return inputs, targets, targets2
+    
+    
     def setup(self, stage='fit'):
         if stage == 'fit':
             # TODO: use_dev 구현
@@ -173,12 +200,19 @@ class KfoldDataloader(Dataloader):
                 total_data = pd.concat([pd.read_csv(self.train_path), pd.read_csv(self.dev_path)])
             else:
                 total_data = pd.read_csv(self.train_path)
-            total_input, total_targets = self.preprocessing(total_data)
-            total_dataset = Dataset(total_input, total_targets)
 
             # 데이터셋 num_splits 번 fold
-            kf = KFold(n_splits=self.num_folds, shuffle=self.shuffle, random_state=self.split_seed)
-            all_splits = [k for k in kf.split(total_dataset)]
+            if self.kfold_mode == 'kfold':
+                total_input, total_targets, _ = self.preprocessing(total_data)
+                total_dataset = Dataset(total_input, total_targets)
+                kf = KFold(n_splits=self.num_folds, shuffle=self.shuffle, random_state=self.split_seed)
+                all_splits = [k for k in kf.split(total_dataset)]
+            elif self.kfold_mode == 'stratified':
+                print('stratified')
+                total_input, total_targets, total_targets2 = self.preprocessing(total_data)
+                total_dataset = Dataset(total_input, total_targets)
+                kf = StratifiedKFold(n_splits=self.num_folds, shuffle=self.shuffle, random_state=self.split_seed)
+                all_splits = [k for k in kf.split(total_dataset, total_targets2)]
             
             # k번째 fold 된 데이터셋의 index 선택
             train_indexes, val_indexes = all_splits[self.k]
@@ -193,8 +227,8 @@ class KfoldDataloader(Dataloader):
             test_data = pd.read_csv(self.test_path)
             predict_data = pd.read_csv(self.predict_path)
             
-            test_inputs, test_targets = self.preprocessing(test_data)
-            predict_inputs, predict_targets = self.preprocessing(predict_data)
+            test_inputs, test_targets, _ = self.preprocessing(test_data)
+            predict_inputs, _, _ = self.preprocessing(predict_data)
             
             self.test_dataset = Dataset(test_inputs, test_targets)
             self.predict_dataset = Dataset(predict_inputs, [])
