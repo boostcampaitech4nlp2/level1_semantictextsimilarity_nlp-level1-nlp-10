@@ -7,6 +7,7 @@ from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
 from sts.utils import set_seed, setdir, check_params, make_file_name
+
 import torch
 import torchmetrics
 from torch.utils.data import DataLoader
@@ -20,6 +21,8 @@ from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
 from sentence_transformers.readers import InputExample
 from sentence_transformers.util import batch_to_device
 from sklearn.metrics.pairwise import paired_cosine_distances
+from pytorch_lightning.loggers import WandbLogger
+import wandb
 
 
 def main(args):
@@ -45,6 +48,11 @@ def main(args):
         shuffle=True,
         batch_size=batch_size
     )
+    valid_examples = make_sts_input_example(dev_df)
+    dev_evaluator = EmbeddingSimilarityEvaluator.from_input_examples(
+    valid_examples,
+    name="sts-dev",
+    )
     dev_data = convert2data(dev_df)
     
     
@@ -68,6 +76,8 @@ def main(args):
     
     if args.wandb:
         wandb.login()
+        wandb_logger = WandbLogger(project=model_name.replace('/', '_'), save_dir = '../data/wandb_checkpoints')
+    
     
     # 3. 모델 저장 경로를 지정하고 model.fit()으로 학습합니다.
     #    losses.CosineSimilarityLoss() 함수를 사용하면 CosineSimilarityLoss을 사용하는 모델을 리턴합니다.
@@ -80,17 +90,17 @@ def main(args):
     warmup_steps = math.ceil(len(train_examples) * epochs / batch_size * 0.1)
     model.fit(
         train_objectives=[(train_dataloader, train_loss)],
-        #evaluator=dev_evaluator,
+        evaluator=dev_evaluator,
         epochs=epochs,
-        #evaluation_steps=int(len(train_dataloader)*0.1),
+        evaluation_steps=int(len(train_dataloader)*0.1),
         warmup_steps=warmup_steps,
         output_path=save_path
     )
     
     # 4. 여기에 dev.csv로 pearson 점수를 계산하는 부분이 필요합니다!
-    score = evaluate(model, *dev_data, batch_size=batch_size)
+    score, result = evaluate(model, *dev_data, logger=wandb_logger, batch_size=batch_size, save_result=True)
     print(f'test_pearson : {score}')
-    
+
     
 # input data를 InputExample 데이터들의 리스트로 만들어서 리턴합니다.
 # InputExample은 StentenceTrnasformer로 입력되는 데이터 형식입니다.
@@ -105,51 +115,55 @@ def make_sts_input_example(dataset):
 
 # dev.csv로 pearson 점수를 계산하는 함수를 만들어보는 중입니다.
 # 현재 밑에 load_test() 함수 안에서 사용되고 있습니다.
-def evaluate(model, st1, st2, labels, batch_size, save_result=False):
-    #dataloader.collate_fn = model.smart_batching_collate
+def evaluate(model, st1, st2, labels, batch_size=1, logger=None, save_result=False):    
+    cosine_scores = calculate_cosine_scores(model, st1, st2, batch_size=batch_size)
+    
+    cosine_scores = torch.FloatTensor(cosine_scores)
+    labels = torch.FloatTensor(labels)
+    pearson = torchmetrics.functional.pearson_corrcoef(cosine_scores, labels)
+    pearson = pearson.item()
+    if logger:
+        wandb.log({'test_pearson': pearson})
+    
+    if save_result:
+        return pearson, cosine_scores
+    else:
+        return pearson
+        
+        
+def calculate_cosine_scores(model, st1, st2, batch_size=1):
     emb1 = model.encode(st1, batch_size=batch_size, convert_to_numpy=True)
     emb2 = model.encode(st2, batch_size=batch_size, convert_to_numpy=True)
-    
-    # 1에서 cosine_distance를 빼는 것으로 cosine_score를 구합니다.
-    # 그리고 데이터의 label 부분과 수치를 맞춰주기 위해 5를 곱했고, 0보다 작은 데이터는 0으로 설정했습니다.
     cosine_scores = 1 - (paired_cosine_distances(emb1, emb2))
     cosine_scores = cosine_scores * 5
     condition = cosine_scores < 0
     cosine_scores[condition] = 0
 
-    cosine_scores = torch.FloatTensor(cosine_scores)
-    labels = torch.FloatTensor(labels)
-    pearson = torchmetrics.functional.pearson_corrcoef(cosine_scores, labels)
-    
-    if save_result:
-        return pearson.item(), cosine_scores
-    else:
-        return pearson.item()
-        
+    return cosine_scores
     
 # 모델을 불러온 뒤 dev.csv 파일을 사용하여 점수를 계산하는 함수입니다.
-def load_test(args, model_path):
-    root_path = 'data/sbert/'
-    model = SentenceTransformer.load(model_path)
-    
-    dev_df = pd.read_csv(args.dev_path)
-    st1, st2, labels = convert2data(dev_df)
-    evaluate(model, st1, st2, labels, batch_size=1)
+
 
 # dev.scv 사용할 때 모든 데이터를 모델에게 한번에 줘야 해서 dataloder를 사용하지 않고 바로 tensor로 바꾸는 함수입니다.
-def convert2data(df: pd.DataFrame):
+def convert2data(df: pd.DataFrame, is_label=True):
     sentences1 = []
     sentences2 = []
     labels = []
     for i, data in tqdm(df.iterrows(), desc='SBERT inference_datas', total=len(df)):
         st1 = data['sentence_1']
         st2 = data['sentence_2']
-        score = (data['label']) * 1.0
         sentences1.append(st1)
         sentences2.append(st2)
-        labels.append(score)
-    return sentences1, sentences2, labels
+        if is_label:
+            score = (data['label']) * 1.0
+            labels.append(score)
+    if is_label:
+        return sentences1, sentences2, labels
+    else:
+        return sentences1, sentences2
     
 if __name__ == '__main__':
     args = get_args(mode="train")
     main(args)
+    model_path = '/opt/ml/project/data/sbert/klue-roberta-large/2022-11-02_04-14-39_epochs15'
+    #load_test(args, model_path)
