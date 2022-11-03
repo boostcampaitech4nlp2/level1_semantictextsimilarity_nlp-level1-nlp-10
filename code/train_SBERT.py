@@ -74,6 +74,7 @@ def main(args):
     
     if args.wandb:
         wandb.login()
+        wandb.init()
     
     
     # 3. 모델 저장 경로를 지정하고 model.fit()으로 학습합니다.
