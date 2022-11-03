@@ -12,7 +12,6 @@ import torch
 import torchmetrics
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import WandbLogger
 import pandas as pd
 from tqdm import tqdm
 from sentence_transformers import SentenceTransformer, models
@@ -21,7 +20,6 @@ from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
 from sentence_transformers.readers import InputExample
 from sentence_transformers.util import batch_to_device
 from sklearn.metrics.pairwise import paired_cosine_distances
-from pytorch_lightning.loggers import WandbLogger
 import wandb
 
 
@@ -76,7 +74,6 @@ def main(args):
     
     if args.wandb:
         wandb.login()
-        wandb_logger = WandbLogger(project=model_name.replace('/', '_'), save_dir = '../data/wandb_checkpoints')
     
     
     # 3. 모델 저장 경로를 지정하고 model.fit()으로 학습합니다.
@@ -98,7 +95,7 @@ def main(args):
     )
     
     # 4. 여기에 dev.csv로 pearson 점수를 계산하는 부분이 필요합니다!
-    score, result = evaluate(model, *dev_data, logger=wandb_logger, batch_size=batch_size, save_result=True)
+    score, result = evaluate(model, *dev_data batch_size=batch_size, logger=True, save_result=True)
     print(f'test_pearson : {score}')
 
     
@@ -165,5 +162,3 @@ def convert2data(df: pd.DataFrame, is_label=True):
 if __name__ == '__main__':
     args = get_args(mode="train")
     main(args)
-    model_path = '/opt/ml/project/data/sbert/klue-roberta-large/2022-11-02_04-14-39_epochs15'
-    #load_test(args, model_path)
