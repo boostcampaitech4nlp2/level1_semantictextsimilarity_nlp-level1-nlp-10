@@ -95,7 +95,7 @@ def main(args):
     )
     
     # 4. 여기에 dev.csv로 pearson 점수를 계산하는 부분이 필요합니다!
-    score, result = evaluate(model, *dev_data batch_size=batch_size, logger=True, save_result=True)
+    score, result = evaluate(model, *dev_data, batch_size=batch_size, logger=True, save_result=True)
     print(f'test_pearson : {score}')
 
     
