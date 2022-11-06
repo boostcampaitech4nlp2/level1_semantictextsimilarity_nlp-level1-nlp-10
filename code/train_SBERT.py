@@ -7,7 +7,6 @@ from args import get_args
 from sts.dataloader import Dataloader
 from sts.model import Model
 from sts.utils import set_seed, setdir, check_params, make_file_name
-
 import torch
 import torchmetrics
 from torch.utils.data import DataLoader
@@ -21,7 +20,8 @@ from sentence_transformers.readers import InputExample
 from sentence_transformers.util import batch_to_device
 from sklearn.metrics.pairwise import paired_cosine_distances
 import wandb
-
+from SBERT_model import STModel
+        
 
 def main(args):
     set_seed(args.seed)
@@ -70,11 +70,21 @@ def main(args):
         pooling_mode_max_tokens=False
     )
 
-    model = SentenceTransformer(modules=[embedding_model, pooling_model])
+    #model = SentenceTransformer(modules=[embedding_model, pooling_model])
+    model = STModel(modules=[embedding_model, pooling_model])
     
     if args.wandb:
         wandb.login()
-        wandb.init()
+        project_name = 'SBERT_klue_roberta-large'
+        config = {
+            'learning_rate': float(args.learning_rate),
+            'epochs': int(args.max_epoch)
+        }
+        wandb.init(project=project_name, 
+                   entity='boostcamp4_nlp10', 
+                   name=f'{args.loss}_epoch' + str(args.max_epoch)
+                   )
+        #wandb.run.name = 'SBERT_' + args.model_name
     
     
     # 3. 모델 저장 경로를 지정하고 model.fit()으로 학습합니다.
@@ -84,7 +94,8 @@ def main(args):
     root_path = '../data/sbert/'
     save_path = root_path + model_name.replace('/', '-') + '/' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '_epochs' + str(epochs)
 
-    train_loss = losses.CosineSimilarityLoss(model=model)
+    #train_loss = losses.CosineSimilarityLoss(model=model)
+    train_loss = loss_model(model, args.loss)
     warmup_steps = math.ceil(len(train_examples) * epochs / batch_size * 0.1)
     model.fit(
         train_objectives=[(train_dataloader, train_loss)],
@@ -92,12 +103,23 @@ def main(args):
         epochs=epochs,
         evaluation_steps=int(len(train_dataloader)*0.1),
         warmup_steps=warmup_steps,
-        output_path=save_path
+        output_path=save_path,
+        logger=wandb,
+        scheduler='warmupcosine'
     )
     
     # 4. 여기에 dev.csv로 pearson 점수를 계산하는 부분이 필요합니다!
     score, result = evaluate(model, *dev_data, batch_size=batch_size, logger=True, save_result=True)
     print(f'test_pearson : {score}')
+    wandb.summary['test_pearson'] = score
+    wandb.finish()
+    
+def loss_model(model, loss):
+    loss_list = 'BatchAllTripletLoss BatchHardSoftMarginTripletLoss BatchHardTripletLoss BatchSemiHardTripletLoss ContrastiveLoss ContrastiveTensionLoss CosineSimilarityLoss DenoisingAutoEncoderLoss MSELoss MarginMSELoss MegaBatchMarginLoss MultipleNegativesRankingLoss MultipleNegativesSymmetricRankingLoss OnlineContrastiveLoss SoftmaxLoss TripletLoss'.split()
+    for item in loss_list:
+        if item == loss:
+            return getattr(losses, item)(model=model)
+    
 
     
 # input data를 InputExample 데이터들의 리스트로 만들어서 리턴합니다.

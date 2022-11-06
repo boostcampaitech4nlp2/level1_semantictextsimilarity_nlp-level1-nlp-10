@@ -45,5 +45,6 @@ def get_args(mode="train"):
                         default=True)
     # 특수문자를 제거할지 결정합니다.
     parser.add_argument('--clean', default=False)
+    parser.add_argument('--loss', default='cosine')
     
     return parser.parse_args(sys.argv[1:])

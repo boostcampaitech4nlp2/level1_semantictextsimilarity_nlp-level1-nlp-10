@@ -27,7 +27,9 @@ def create_submision(model_path, save_path=None):
     
 def save_result(ids, result, path):
     os.makedirs(path, exist_ok=True)
-    with open(os.path.join(path, 'submission.csv'), 'w') as f:
+    with open(os.path.join(path, 'submission_dev.csv'), 'w') as f:
+        text = 'id,target\n'
+        f.write(text)
         for idx, data in zip(ids, result):
             text = f'{idx},{data:.1f}\n'
             f.write(text)
