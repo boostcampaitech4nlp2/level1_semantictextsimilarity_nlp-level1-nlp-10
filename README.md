@@ -29,7 +29,10 @@
 ##### Inference phase
 ```
 >>> cd code
->>> python inference.py --model_name=[model name] --version=[model 버전 명] --checkpoint_path=[ckpt 폴더 내 선택할 경로명]
+>>> python inference.py
+	 --model_name=[model name] 
+	 --version=[model 버전 명] 
+	 --checkpoint_path=[ckpt 폴더 내 선택할 경로명]
 ```
 
 ### Project Directories
@@ -52,7 +55,7 @@
    └─ wandb_checkpoints
 ```
 
-### Memebers
+### Memebers 👥
 ---
 **공통** : hyperparameter 조정 및 실험
 -   **김지수**(팀장) [Github](https://github.com/kuotient)
