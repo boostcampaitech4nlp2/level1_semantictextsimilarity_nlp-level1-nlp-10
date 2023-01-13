@@ -62,7 +62,7 @@
     - Project Manager, 프로젝트 전체 구성, 학습 개선 팀
         -   프로젝트 리드
         -   학습 개선: K-fold, 학습 분석 툴 wandb, 코드 리팩토링
--   **김산**(팀원) [Github](https://github.com/jtlsan)
+-   **김산**(팀원) [Github](https://github.com/mountinyy)
     - 데이터 팀, 모델 팀
         -   특수문자 제거 기능 구현
         -   SBERT 학습 구현
